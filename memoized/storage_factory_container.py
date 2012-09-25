@@ -9,8 +9,8 @@ from .const import SELF, FUNCTION
 
 
 STORAGE_FACTORY_MAP = {
-    SELF: '.storage.instance:InstanceStorageFactory',
-    FUNCTION: '.storage.function:FunctionStorageFactory',
+    SELF: '.storage:InstanceStorageFactory',
+    FUNCTION: '.storage:FunctionStorageFactory',
 }
 
 

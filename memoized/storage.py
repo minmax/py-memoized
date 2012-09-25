@@ -1,4 +1,4 @@
-from ..errors import NoResult
+from .errors import NoResult
 from .cleaners import CleanerFactory
 
 
@@ -144,7 +144,7 @@ class BaseStorageFactory(object):
         raise NotImplementedError()
 
 
-class InstanceStorageFactory(object):
+class InstanceStorageFactory(BaseStorageFactory):
     def get_container(self, strategy):
         return InstanceContainerStrategy(strategy)
 
@@ -152,9 +152,10 @@ class InstanceStorageFactory(object):
         return InstanceHolderStrategy(strategy)
 
 
-class FunctionStorageFactory(object):
+class FunctionStorageFactory(BaseStorageFactory):
     def get_container(self, strategy):
         return FunctionContainerStrategy(strategy)
 
     def get_holder(self, strategy):
         return FunctionHolderStrategy(strategy)
+

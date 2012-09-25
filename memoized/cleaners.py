@@ -1,6 +1,6 @@
 import time
 
-from ..invalidate import Expire, Count, Event
+from .invalidate import Expire, Count, Event
 
 
 class ExpireCleaner(object):
