@@ -1,0 +1,2 @@
+SELF = 'self'
+FUNCTION = 'function'
