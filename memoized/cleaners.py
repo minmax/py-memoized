@@ -50,7 +50,7 @@ class EventCleaner(object):
 
 class DummyCleaner(object):
     def is_missed(self):
-        pass
+        return False
 
     def after_fetch(self):
         pass
