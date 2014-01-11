@@ -38,9 +38,3 @@ class Memoizer(object):
             result = self.function(*args, **kwargs)
             self.storage.save_result(args, kwargs, result)
             return result
-
-
-class ThreadSafeMemoizer(Memoizer):
-    def get_result(self, args, kwargs):
-        with self.storage.get_lock(args, kwargs):
-            return super(ThreadSafeMemoizer, self).get_result(args, kwargs)

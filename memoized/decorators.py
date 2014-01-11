@@ -1,14 +1,11 @@
 from functools import wraps
 
-from .memoizer import Memoizer, ThreadSafeMemoizer
+from .memoizer import Memoizer
 
 
-def memoized(function=None, ts=False, storage=None, **kwargs):
+def memoized(function=None, storage=None, **kwargs):
     def decorator(function):
-        if ts:
-            memoizer = ThreadSafeMemoizer(function, storage, **kwargs)
-        else:
-            memoizer = Memoizer(function, storage, **kwargs)
+        memoizer = Memoizer(function, storage, **kwargs)
 
         @wraps(function)
         def wrapper(*args, **kwargs):

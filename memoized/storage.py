@@ -12,9 +12,6 @@ class SimpleStorage(object):
         self.key = key
         self.invalidate = self.cleaner_factory.get_cleaner(invalidate)
 
-    def get_lock(self, args, kwargs):
-        raise NotImplementedError()
-
     def get_result(self, args, kwargs):
         result = self.strategy.get_result(args, kwargs)
         if self.invalidate.is_missed():

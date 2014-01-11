@@ -1,8 +1,3 @@
-try:
-    from threading import Lock
-except ImportError:
-    from dummy_threading import Lock
-
 from importlib import import_module
 
 from .const import SELF, FUNCTION
@@ -15,8 +10,6 @@ STORAGE_FACTORY_MAP = {
 
 
 class StorageFactoryContainer(object):
-    lock = Lock()
-
     def __init__(self):
         self.storage_factory_by_name = {}
         self.storage_factory_cls_map = STORAGE_FACTORY_MAP.copy()
@@ -34,14 +27,9 @@ class StorageFactoryContainer(object):
         except KeyError:
             pass
 
-        with self.lock:
-            try:
-                return self.storage_factory_by_name[name]
-            except KeyError:
-                pass
-            storage_factory = self._get_storage_factory_instance(name)
-            self.storage_factory_by_name[name] = storage_factory
-            return storage_factory
+        storage_factory = self._get_storage_factory_instance(name)
+        self.storage_factory_by_name[name] = storage_factory
+        return storage_factory
 
     def _get_storage_factory_instance(self, name):
         cls_path = self.storage_factory_cls_map[name]
