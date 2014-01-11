@@ -1,6 +1,7 @@
 import time
 
 from .invalidate import Expire, Count, Event
+from .errors import CleanerNotDefined
 
 
 class ExpireCleaner(object):
@@ -67,4 +68,9 @@ class CleanerFactory(object):
     def get_cleaner(self, rule):
         if rule is None:
             return self.dummy_cleaner
-        return self.cleaners[type(rule)](rule)
+        try:
+            cleaner_cls = self.cleaners[type(rule)]
+        except KeyError:
+            raise CleanerNotDefined('No cleaner for %r' % (rule, ))
+        else:
+            return cleaner_cls(rule)

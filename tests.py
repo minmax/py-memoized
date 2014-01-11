@@ -1,10 +1,12 @@
-from unittest import TestCase
+from unittest2 import TestCase
 
 from mock import Mock
 
 from memoized import memoized
 from memoized.invalidate import Count, Expire
 from memoized.const import SELF, FUNCTION
+from memoized.cleaners import CleanerFactory, DummyCleaner, CountCleaner
+from memoized.errors import CleanerNotDefined
 
 
 class BaseTest(TestCase):
@@ -93,3 +95,20 @@ class FunctionStorageTest(BaseStorageTest):
         self.call_twice(func1, 1)
         self.call_twice(func2, 2)
         self.assertDataGeneratorCalled(2)
+
+
+class CleanerFactoryTest(TestCase):
+    def setUp(self):
+        self.factory = CleanerFactory()
+
+    def test_dummy_cleaner(self):
+        cleaner = self.factory.get_cleaner(None)
+        self.assertIsInstance(cleaner, DummyCleaner)
+
+    def test_count_cleaner(self):
+        cleaner = self.factory.get_cleaner(Count(0))
+        self.assertIsInstance(cleaner, CountCleaner)
+
+    def test_not_registered_cleaner(self):
+        with self.assertRaises(CleanerNotDefined):
+            self.factory.get_cleaner(object())
