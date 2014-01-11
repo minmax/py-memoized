@@ -73,6 +73,7 @@ class InstanceStorageTests(BaseStorageTest):
 
     def create_instance(self, return_value):
         test = self
+
         class NewClass(object):
             @memoized(storage=SELF)
             def do(self):

@@ -158,4 +158,3 @@ class FunctionStorageFactory(BaseStorageFactory):
 
     def get_holder(self, strategy):
         return FunctionHolderStrategy(strategy)
-
