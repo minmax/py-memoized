@@ -40,21 +40,21 @@ class SimpleStorageStrategy(object):
         setattr(self.container.get_object(args, kwargs), self.attr_name, result)
 
 
-class BaseContainerStrategy(object):
+class BaseContainerGetter(object):
     def __init__(self, storage_strategy):
         self.storage_strategy = storage_strategy
 
 
-class FunctionContainerStrategy(BaseContainerStrategy):
+class FunctionContainerGetter(BaseContainerGetter):
     def __init__(self, storage_strategy):
-        super(FunctionContainerStrategy, self).__init__(storage_strategy)
+        super(FunctionContainerGetter, self).__init__(storage_strategy)
         self.function = storage_strategy.storage.function
 
     def get_object(self, args, kwargs):
         return self.function
 
 
-class InstanceContainerStrategy(BaseContainerStrategy):
+class InstanceContainerGetter(BaseContainerGetter):
     def get_object(self, args, kwargs):
         return args[0]
 
@@ -79,14 +79,14 @@ class StorageWithKeyStrategy(object):
         container[self.key(*args, **kwargs)] = result
 
 
-class BaseHolderStrategy(object):
+class BaseHolder(object):
     def __init__(self, storage_strategy):
         self.attr_name = storage_strategy.attr_name
 
 
-class FunctionHolderStrategy(BaseHolderStrategy):
+class FunctionHolder(BaseHolder):
     def __init__(self, storage_strategy):
-        super(FunctionHolderStrategy, self).__init__(storage_strategy)
+        super(FunctionHolder, self).__init__(storage_strategy)
         self.function = storage_strategy.storage.function
 
     def get_container(self, args, kwargs):
@@ -104,7 +104,7 @@ class FunctionHolderStrategy(BaseHolderStrategy):
             return container
 
 
-class InstanceHolderStrategy(BaseHolderStrategy):
+class InstanceHolder(BaseHolder):
     def get_container(self, args, kwargs):
         instance = args[0]
         try:
@@ -143,15 +143,15 @@ class BaseStorageFactory(object):
 
 class InstanceStorageFactory(BaseStorageFactory):
     def get_container(self, strategy):
-        return InstanceContainerStrategy(strategy)
+        return InstanceContainerGetter(strategy)
 
     def get_holder(self, strategy):
-        return InstanceHolderStrategy(strategy)
+        return InstanceHolder(strategy)
 
 
 class FunctionStorageFactory(BaseStorageFactory):
     def get_container(self, strategy):
-        return FunctionContainerStrategy(strategy)
+        return FunctionContainerGetter(strategy)
 
     def get_holder(self, strategy):
-        return FunctionHolderStrategy(strategy)
+        return FunctionHolder(strategy)
