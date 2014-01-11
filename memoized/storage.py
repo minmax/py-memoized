@@ -40,25 +40,6 @@ class SimpleStorageStrategy(object):
         setattr(self.container.get_object(args, kwargs), self.attr_name, result)
 
 
-class BaseContainerGetter(object):
-    def __init__(self, storage_strategy):
-        self.storage_strategy = storage_strategy
-
-
-class FunctionContainerGetter(BaseContainerGetter):
-    def __init__(self, storage_strategy):
-        super(FunctionContainerGetter, self).__init__(storage_strategy)
-        self.function = storage_strategy.storage.function
-
-    def get_object(self, args, kwargs):
-        return self.function
-
-
-class InstanceContainerGetter(BaseContainerGetter):
-    def get_object(self, args, kwargs):
-        return args[0]
-
-
 class StorageWithKeyStrategy(object):
     holder = None
 
@@ -77,6 +58,25 @@ class StorageWithKeyStrategy(object):
     def save_result(self, args, kwargs, result):
         container = self.holder.get_or_create_container(args, kwargs)
         container[self.key(*args, **kwargs)] = result
+
+
+class BaseContainerGetter(object):
+    def __init__(self, storage_strategy):
+        self.storage_strategy = storage_strategy
+
+
+class FunctionContainerGetter(BaseContainerGetter):
+    def __init__(self, storage_strategy):
+        super(FunctionContainerGetter, self).__init__(storage_strategy)
+        self.function = storage_strategy.storage.function
+
+    def get_object(self, args, kwargs):
+        return self.function
+
+
+class InstanceContainerGetter(BaseContainerGetter):
+    def get_object(self, args, kwargs):
+        return args[0]
 
 
 class BaseHolder(object):
