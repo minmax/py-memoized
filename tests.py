@@ -3,10 +3,35 @@ from unittest2 import TestCase
 from mock import Mock
 
 from memoized import memoized
-from memoized.invalidate import Count, Expire
+from memoized.invalidate import Count, Expire, Event, EventListener
 from memoized.const import SELF, FUNCTION
-from memoized.cleaners import CleanerFactory, DummyCleaner, CountCleaner
+from memoized.cleaners import CleanerFactory, DummyCleaner, CountCleaner, ExpireCleaner, EventCleaner
 from memoized.errors import CleanerNotDefined
+
+
+class CleanerTest(TestCase):
+    def test_count_cleaner(self):
+        cleaner = CountCleaner(Count(1))
+        cleaner.after_fetch()
+        self.assertFalse(cleaner.is_missed())
+        self.assertTrue(cleaner.is_missed())
+
+    def test_expire_cleaner(self):
+        timer = Mock(return_value=0)
+        cleaner = ExpireCleaner(Expire(2, timer))
+        cleaner.after_fetch()
+        timer.return_value = 1
+        self.assertFalse(cleaner.is_missed())
+        timer.return_value = 2
+        self.assertTrue(cleaner.is_missed())
+
+    def test_event_cleaner(self):
+        listener = EventListener()
+        cleaner = EventCleaner(Event(listener))
+        cleaner.after_fetch()
+        self.assertFalse(cleaner.is_missed())
+        listener.clean()
+        self.assertTrue(cleaner.is_missed())
 
 
 class BaseTest(TestCase):

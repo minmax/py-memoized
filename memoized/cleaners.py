@@ -13,9 +13,7 @@ class ExpireCleaner(object):
             self.timer = rule.timer
 
     def is_missed(self):
-        now = self.timer()
-        if now >= self.created_at + self.rule.period:
-            return True
+        return self.timer() >= self.created_at + self.rule.period
 
     def after_fetch(self):
         self.created_at = self.timer()
@@ -29,6 +27,7 @@ class CountCleaner(object):
         if self.readers_count >= self.rule.count:
             return True
         self.readers_count += 1
+        return False
 
     def after_fetch(self):
         self.readers_count = 0
