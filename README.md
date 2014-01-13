@@ -6,11 +6,10 @@ Powerful python memoized decorator
 ```
 from memoized import memoized
 from memoized.const import SELF, FUNCTION
-from memoized.invalidate import Expire
 
 
 class Foo(object):
-    @memoized(storage=SELF, invalidate=Expire(60))
+    @memoized(storage=SELF)
     def get_some_data(self):
         return 'foo'
 

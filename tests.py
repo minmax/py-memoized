@@ -2,38 +2,8 @@ import sys
 
 from unittest2 import TestCase
 
-from mock import Mock
-
 from memoized import memoized
-from memoized.invalidate import Count, Expire, Event, EventListener
 from memoized.const import SELF, FUNCTION
-from memoized.cleaners import CleanerFactory, DummyCleaner, CountCleaner, ExpireCleaner, EventCleaner
-from memoized.errors import CleanerNotDefined
-
-
-class CleanerTest(TestCase):
-    def test_count_cleaner(self):
-        cleaner = CountCleaner(Count(1))
-        cleaner.after_fetch()
-        self.assertFalse(cleaner.is_missed())
-        self.assertTrue(cleaner.is_missed())
-
-    def test_expire_cleaner(self):
-        timer = Mock(return_value=0)
-        cleaner = ExpireCleaner(Expire(2, timer))
-        cleaner.after_fetch()
-        timer.return_value = 1
-        self.assertFalse(cleaner.is_missed())
-        timer.return_value = 2
-        self.assertTrue(cleaner.is_missed())
-
-    def test_event_cleaner(self):
-        listener = EventListener()
-        cleaner = EventCleaner(Event(listener))
-        cleaner.after_fetch()
-        self.assertFalse(cleaner.is_missed())
-        listener.clean()
-        self.assertTrue(cleaner.is_missed())
 
 
 class BaseTest(TestCase):
@@ -82,25 +52,6 @@ class BaseTest(TestCase):
         return NewClass
 
 
-class InvalidateTests(BaseTest):
-    def test_expire_after_2_calls(self):
-        func = self.create_function(invalidate=Count(2))
-        self.call_twice(func)
-        self.call_with_check_result(func)
-        self.assertDataGeneratorCalled(1)
-        self.call_with_check_result(func)
-        self.assertDataGeneratorCalled(2)
-
-    def test_expire_after_timeout(self):
-        mock_timer = Mock(return_value=0)
-        func = self.create_function(invalidate=Expire(2, timer=mock_timer))
-        self.call_twice(func)
-        self.assertDataGeneratorCalled(1)
-        mock_timer.return_value = 3
-        self.call_with_check_result(func)
-        self.assertDataGeneratorCalled(2)
-
-
 class BaseStorageTest(BaseTest):
     def check_cache_worked(self, function):
         self.call_twice(function)
@@ -131,23 +82,6 @@ class FunctionStorageTest(BaseStorageTest):
         self.call_twice(func1, 1)
         self.call_twice(func2, 2)
         self.assertDataGeneratorCalled(2)
-
-
-class CleanerFactoryTest(TestCase):
-    def setUp(self):
-        self.factory = CleanerFactory()
-
-    def test_dummy_cleaner(self):
-        cleaner = self.factory.get_cleaner(None)
-        self.assertIsInstance(cleaner, DummyCleaner)
-
-    def test_count_cleaner(self):
-        cleaner = self.factory.get_cleaner(Count(0))
-        self.assertIsInstance(cleaner, CountCleaner)
-
-    def test_not_registered_cleaner(self):
-        with self.assertRaises(CleanerNotDefined):
-            self.factory.get_cleaner(object())
 
 
 class CleanTest(BaseTest):

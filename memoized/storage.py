@@ -1,26 +1,19 @@
 from .errors import NoResult
-from .cleaners import CleanerFactory
 from .objects_cleaner import ObjectsCleaner
 
 
 class SimpleStorage(object):
-    cleaner_factory = CleanerFactory()
     strategy = None
 
-    def __init__(self, function, invalidate=None, key=None, **kwargs):
+    def __init__(self, function, key=None, **kwargs):
         assert not kwargs, '%r not supported' % kwargs
         self.function = function
         self.key = key
-        self.invalidate = self.cleaner_factory.get_cleaner(invalidate)
 
     def get_result(self, args, kwargs):
-        result = self.strategy.get_result(args, kwargs)
-        if self.invalidate.is_missed():
-            raise NoResult()
-        return result
+        return self.strategy.get_result(args, kwargs)
 
     def save_result(self, args, kwargs, result):
-        self.invalidate.after_fetch()
         self.strategy.save_result(args, kwargs, result)
 
     def clear(self, instance=None):
