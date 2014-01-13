@@ -11,7 +11,6 @@ class ObjectsCleaner(object):
 
     def clear(self):
         for obj in self.objects:
-            print 'REMOVE', obj
             try:
                 delattr(obj, self.attribute_name)
             except AttributeError:
