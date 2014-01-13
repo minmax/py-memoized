@@ -62,6 +62,25 @@ class BaseTest(TestCase):
             return return_value
         return func
 
+    def create_instance(self, return_value=data, **kwargs):
+        cls = self.create_cls(return_value, **kwargs)
+        return cls()
+
+    def create_cls(self, return_value=data, **kwargs):
+        test = self
+
+        options = {
+            'storage': SELF,
+        }
+        options.update(kwargs)
+
+        class NewClass(object):
+            @memoized(**options)
+            def do(self, *args, **kwargs):
+                test.increment_calls_count()
+                return return_value
+        return NewClass
+
 
 class InvalidateTests(BaseTest):
     def test_expire_after_2_calls(self):
@@ -99,16 +118,6 @@ class InstanceStorageTests(BaseStorageTest):
         self.call_with_check_result(obj1.do, 1)
         self.call_with_check_result(obj2.do, 2)
         self.assertDataGeneratorCalled(2)
-
-    def create_instance(self, return_value):
-        test = self
-
-        class NewClass(object):
-            @memoized(storage=SELF)
-            def do(self):
-                test.increment_calls_count()
-                return return_value
-        return NewClass()
 
 
 class FunctionStorageTest(BaseStorageTest):
@@ -155,24 +164,12 @@ class CleanTest(BaseTest):
         self.call_twice_and_check_calls_count(func, object())
 
     def test_instance_no_key(self):
-        test = self
-
-        class C(object):
-            @memoized(storage=SELF)
-            def func(self):
-                test.increment_calls_count()
-        obj = C()
-        self.call_twice_and_check_calls_count(obj.func)
+        obj = self.create_instance()
+        self.call_twice_and_check_calls_count(obj.do)
 
     def test_instance_with_key(self):
-        test = self
-
-        class C(object):
-            @memoized(storage=SELF, key=lambda s, x: id(x))
-            def func(self, obj):
-                test.increment_calls_count()
-        obj = C()
-        self.call_twice_and_check_calls_count(obj.func, object())
+        obj = self.create_instance(key=lambda s, x: id(x))
+        self.call_twice_and_check_calls_count(obj.do, object())
 
     def call_twice_and_check_calls_count(self, func, *args, **kwargs):
         func(*args, **kwargs)
@@ -182,11 +179,7 @@ class CleanTest(BaseTest):
         self.assertEqual(2, self.calls_count)
 
     def test_no_refs_for_collected_objects(self):
-        class C(object):
-            @memoized(storage=SELF)
-            def func(self):
-                pass
-        obj = C()
+        obj = self.create_instance()
         refs_count = sys.getrefcount(obj)
-        obj.func()
+        obj.do()
         self.assertEqual(sys.getrefcount(obj), refs_count)
