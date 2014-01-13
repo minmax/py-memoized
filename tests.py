@@ -183,3 +183,35 @@ class CleanTest(BaseTest):
         refs_count = sys.getrefcount(obj)
         obj.do()
         self.assertEqual(sys.getrefcount(obj), refs_count)
+
+    def test_clear_all_instances_cache(self):
+        objects_count = 10
+        cls = self.create_cls()
+        objects = [cls() for x in xrange(objects_count)]
+
+        # fill cache
+        for obj in objects:
+            obj.do()
+        self.assertEqual(self.calls_count, objects_count)
+
+        cls.do.memoizer.clear()
+
+        for obj in objects:
+            obj.do()
+
+        self.assertEqual(self.calls_count, objects_count * 2)
+
+    def test_clear_one_instance_cache(self):
+        cls = self.create_cls(cleanable=True)
+        cleaned = cls()
+        not_cleaned = cls()
+
+        cleaned.do()
+        not_cleaned.do()
+
+        cleaned.do.memoizer.clear()
+
+        cleaned.do()
+        self.assertEqual(3, self.calls_count)
+        not_cleaned.do()
+        self.assertEqual(3, self.calls_count)

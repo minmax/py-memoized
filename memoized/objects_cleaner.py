@@ -9,10 +9,23 @@ class ObjectsCleaner(object):
     def add(self, obj):
         self.objects.add(obj)
 
-    def clear(self):
-        for obj in self.objects:
+    def clear(self, instance=None):
+        if instance is None:
+            self._clear_all_objects()
+        else:
+            self._clear_obj(instance)
             try:
-                delattr(obj, self.attribute_name)
-            except AttributeError:
+                self.objects.remove(instance)
+            except KeyError:
                 pass
+
+    def _clear_all_objects(self):
+        for obj in self.objects:
+            self._clear_obj(obj)
         self.objects.clear()
+
+    def _clear_obj(self, obj):
+        try:
+            delattr(obj, self.attribute_name)
+        except AttributeError:
+            pass

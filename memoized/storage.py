@@ -23,8 +23,8 @@ class SimpleStorage(object):
         self.invalidate.after_fetch()
         self.strategy.save_result(args, kwargs, result)
 
-    def clear(self):
-        self.strategy.clear()
+    def clear(self, instance=None):
+        self.strategy.clear(instance)
 
 
 class SimpleStorageStrategy(object):
@@ -43,8 +43,8 @@ class SimpleStorageStrategy(object):
     def save_result(self, args, kwargs, result):
         setattr(self.container.get_object(args, kwargs), self.attr_name, result)
 
-    def clear(self):
-        self.container.clear()
+    def clear(self, instance=None):
+        self.container.clear(instance)
 
 
 class StorageWithKeyStrategy(object):
@@ -66,8 +66,8 @@ class StorageWithKeyStrategy(object):
         container = self.holder.get_or_create_container(args, kwargs)
         container[self.key(*args, **kwargs)] = result
 
-    def clear(self):
-        self.holder.clear()
+    def clear(self, instance=None):
+        self.holder.clear(instance)
 
 
 class BaseContainerGetter(object):
@@ -83,7 +83,7 @@ class FunctionContainerGetter(BaseContainerGetter):
     def get_object(self, args, kwargs):
         return self.function
 
-    def clear(self):
+    def clear(self, instance=None):
         try:
             delattr(self.function, self.storage_strategy.attr_name)
         except AttributeError:
@@ -100,8 +100,8 @@ class InstanceContainerGetter(BaseContainerGetter):
         self.cleaner.add(instance)
         return instance
 
-    def clear(self):
-        self.cleaner.clear()
+    def clear(self, instance=None):
+        self.cleaner.clear(instance)
 
 
 class BaseHolder(object):
@@ -128,7 +128,7 @@ class FunctionHolder(BaseHolder):
             setattr(self.function, self.attr_name, container)
             return container
 
-    def clear(self):
+    def clear(self, instance=None):
         try:
             delattr(self.function, self.attr_name)
         except AttributeError:
@@ -157,8 +157,8 @@ class InstanceHolder(BaseHolder):
             self.cleaner.add(instance)
             return container
 
-    def clear(self):
-        self.cleaner.clear()
+    def clear(self, instance=None):
+        self.cleaner.clear(instance)
 
 
 class BaseStorageFactory(object):

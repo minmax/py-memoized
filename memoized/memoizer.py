@@ -16,5 +16,5 @@ class Memoizer(object):
             self.storage.save_result(args, kwargs, result)
             return result
 
-    def clear(self):
-        self.storage.clear()
+    def clear(self, instance=None):
+        self.storage.clear(instance)
