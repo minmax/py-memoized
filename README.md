@@ -18,4 +18,8 @@ class Foo(object):
 @memoized(storage=FUNCTION, key=lambda p: p.id)
 def get_profile_balance(profile):
     return Balance.get_for_profile(profile)
+
+# Clear cache
+Foo.get_some_data.memoizer.clear()
+get_profile_balance.memoizer.clear()
 ```

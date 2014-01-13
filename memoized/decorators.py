@@ -10,5 +10,6 @@ def memoized(function=None, storage=None, **kwargs):
         @wraps(function)
         def wrapper(*args, **kwargs):
             return memoizer.get_result(args, kwargs)
+        wrapper.memoizer = memoizer
         return wrapper
     return decorator if function is None else decorator(function)

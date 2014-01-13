@@ -1,3 +1,5 @@
+import sys
+
 from unittest2 import TestCase
 
 from mock import Mock
@@ -137,3 +139,54 @@ class CleanerFactoryTest(TestCase):
     def test_not_registered_cleaner(self):
         with self.assertRaises(CleanerNotDefined):
             self.factory.get_cleaner(object())
+
+
+class CleanTest(BaseTest):
+    def test_function_no_key(self):
+        @memoized(storage=FUNCTION)
+        def func():
+            self.increment_calls_count()
+        self.call_twice_and_check_calls_count(func)
+
+    def test_function_with_key(self):
+        @memoized(storage=FUNCTION, key=lambda x: id(x))
+        def func(obj):
+            self.increment_calls_count()
+        self.call_twice_and_check_calls_count(func, object())
+
+    def test_instance_no_key(self):
+        test = self
+
+        class C(object):
+            @memoized(storage=SELF)
+            def func(self):
+                test.increment_calls_count()
+        obj = C()
+        self.call_twice_and_check_calls_count(obj.func)
+
+    def test_instance_with_key(self):
+        test = self
+
+        class C(object):
+            @memoized(storage=SELF, key=lambda s, x: id(x))
+            def func(self, obj):
+                test.increment_calls_count()
+        obj = C()
+        self.call_twice_and_check_calls_count(obj.func, object())
+
+    def call_twice_and_check_calls_count(self, func, *args, **kwargs):
+        func(*args, **kwargs)
+        self.assertEqual(1, self.calls_count)
+        func.memoizer.clear()
+        func(*args, **kwargs)
+        self.assertEqual(2, self.calls_count)
+
+    def test_no_refs_for_collected_objects(self):
+        class C(object):
+            @memoized(storage=SELF)
+            def func(self):
+                pass
+        obj = C()
+        refs_count = sys.getrefcount(obj)
+        obj.func()
+        self.assertEqual(sys.getrefcount(obj), refs_count)

@@ -15,3 +15,6 @@ class Memoizer(object):
             result = self.function(*args, **kwargs)
             self.storage.save_result(args, kwargs, result)
             return result
+
+    def clear(self):
+        self.storage.clear()

@@ -1,5 +1,6 @@
 from .errors import NoResult
 from .cleaners import CleanerFactory
+from .objects_cleaner import ObjectsCleaner
 
 
 class SimpleStorage(object):
@@ -22,6 +23,9 @@ class SimpleStorage(object):
         self.invalidate.after_fetch()
         self.strategy.save_result(args, kwargs, result)
 
+    def clear(self):
+        self.strategy.clear()
+
 
 class SimpleStorageStrategy(object):
     container = None
@@ -38,6 +42,9 @@ class SimpleStorageStrategy(object):
 
     def save_result(self, args, kwargs, result):
         setattr(self.container.get_object(args, kwargs), self.attr_name, result)
+
+    def clear(self):
+        self.container.clear()
 
 
 class StorageWithKeyStrategy(object):
@@ -59,6 +66,9 @@ class StorageWithKeyStrategy(object):
         container = self.holder.get_or_create_container(args, kwargs)
         container[self.key(*args, **kwargs)] = result
 
+    def clear(self):
+        self.holder.clear()
+
 
 class BaseContainerGetter(object):
     def __init__(self, storage_strategy):
@@ -73,10 +83,25 @@ class FunctionContainerGetter(BaseContainerGetter):
     def get_object(self, args, kwargs):
         return self.function
 
+    def clear(self):
+        try:
+            delattr(self.function, self.storage_strategy.attr_name)
+        except AttributeError:
+            pass
+
 
 class InstanceContainerGetter(BaseContainerGetter):
+    def __init__(self, storage_strategy):
+        super(InstanceContainerGetter, self).__init__(storage_strategy)
+        self.cleaner = ObjectsCleaner(storage_strategy.attr_name)
+
     def get_object(self, args, kwargs):
-        return args[0]
+        instance = args[0]
+        self.cleaner.add(instance)
+        return instance
+
+    def clear(self):
+        self.cleaner.clear()
 
 
 class BaseHolder(object):
@@ -103,8 +128,18 @@ class FunctionHolder(BaseHolder):
             setattr(self.function, self.attr_name, container)
             return container
 
+    def clear(self):
+        try:
+            delattr(self.function, self.attr_name)
+        except AttributeError:
+            pass
+
 
 class InstanceHolder(BaseHolder):
+    def __init__(self, storage_strategy):
+        super(InstanceHolder, self).__init__(storage_strategy)
+        self.cleaner = ObjectsCleaner(self.attr_name)
+
     def get_container(self, args, kwargs):
         instance = args[0]
         try:
@@ -119,7 +154,11 @@ class InstanceHolder(BaseHolder):
         except AttributeError:
             container = {}
             setattr(instance, self.attr_name, container)
+            self.cleaner.add(instance)
             return container
+
+    def clear(self):
+        self.cleaner.clear()
 
 
 class BaseStorageFactory(object):
