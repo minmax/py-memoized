@@ -3,10 +3,10 @@ from functools import wraps, update_wrapper
 from .memoizer import Memoizer
 
 
-def memoized(function=None, storage=None, **kwargs):
+def memoized(func=None, storage=None, **options):
     def decorator(function):
-        cleanable = kwargs.pop('cleanable', False)
-        memoizer = Memoizer(function, storage, **kwargs)
+        cleanable = options.pop('cleanable', False)
+        memoizer = Memoizer(function, storage, **options)
 
         @wraps(function)
         def wrapper(*args, **kwargs):
@@ -16,7 +16,7 @@ def memoized(function=None, storage=None, **kwargs):
             instance_wrapper = Wrapper(memoizer, wrapper)
             wrapper = update_wrapper(instance_wrapper, function)
         return wrapper
-    return decorator if function is None else decorator(function)
+    return decorator if func is None else decorator(func)
 
 
 class Wrapper(object):
