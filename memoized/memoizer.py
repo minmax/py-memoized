@@ -1,11 +1,11 @@
-from .storage_factory_container import storage_factory_container
+from .storage_factory_factory import storage_factory_factory
 from .errors import NoResult
 
 
 class Memoizer(object):
     def __init__(self, function, storage, **kwargs):
         self.function = function
-        storage = storage_factory_container.get_storage(storage, function, **kwargs)
+        storage = storage_factory_factory.get_storage(storage, function, **kwargs)
         self.storage = storage
 
     def get_result(self, args, kwargs):
