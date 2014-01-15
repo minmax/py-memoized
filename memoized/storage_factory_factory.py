@@ -10,8 +10,11 @@ class StorageFactoryFactory(object):
         }
 
     def get_storage(self, name, function, **kwargs):
-        storage_factory = self.storages[name]
-        return storage_factory(function, **kwargs)
+        if isinstance(name, basestring):
+            storage_factory = self.storages[name]
+            return storage_factory(function, **kwargs)
+        else:
+            return name
 
 
 storage_factory_factory = StorageFactoryFactory()

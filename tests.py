@@ -1,9 +1,12 @@
 import sys
 
-from unittest2 import TestCase
+from unittest2 import TestCase, SkipTest
 
 from memoized import memoized
 from memoized.const import SELF, FUNCTION
+from memoized.errors import NoResult
+from memoized.memoizers.tornado_memoizer import TornadoMemoizer, tornado_support
+from memoized.memoizers.tx_memoizer import twisted_support, TxMemoizer
 
 
 class BaseTest(TestCase):
@@ -149,3 +152,71 @@ class CleanTest(BaseTest):
         self.assertEqual(3, self.calls_count)
         not_cleaned.do()
         self.assertEqual(3, self.calls_count)
+
+
+class FakeStorage(object):
+    NULL = object()
+
+    def __init__(self):
+        self.data = self.NULL
+
+    def get_result(self, args, kwargs):
+        if self.data is self.NULL:
+            raise NoResult()
+        else:
+            return self.data
+
+    def save_result(self, args, kwargs, result):
+        self.data = result
+
+
+if tornado_support:
+    from tornado.testing import AsyncTestCase
+    from tornado import gen
+
+    class TornadoMemoizerTest(AsyncTestCase):
+        DATA = object()
+        counter = 0
+
+        @gen.engine
+        def test_memoizer(self):
+            storage = FakeStorage()
+            meoizer = TornadoMemoizer(self._data_generator, storage)
+
+            result = yield gen.Task(meoizer.get_result)
+            self.assertIs(result, self.DATA)
+            self.assertEqual(1, self.counter)
+
+            cached_result = yield gen.Task(meoizer.get_result)
+            self.assertIs(cached_result, self.DATA)
+            self.assertEqual(1, self.counter)
+
+        def _data_generator(self, callback):
+            self.counter += 1
+            callback(self.DATA)
+
+
+if twisted_support:
+    from twisted.trial.unittest import TestCase as TwistedTestCase
+    from twisted.internet.defer import inlineCallbacks, succeed
+
+    class TwistedMemoizerTest(TwistedTestCase):
+        DATA = object()
+        counter = 0
+
+        @inlineCallbacks
+        def test_memoizer(self):
+            storage = FakeStorage()
+            meoizer = TxMemoizer(self._data_generator, storage)
+
+            result = yield meoizer.get_result()
+            self.assertIs(result, self.DATA)
+            self.assertEqual(1, self.counter)
+
+            cached_result = yield meoizer.get_result()
+            self.assertIs(cached_result, self.DATA)
+            self.assertEqual(1, self.counter)
+
+        def _data_generator(self):
+            self.counter += 1
+            return succeed(self.DATA)

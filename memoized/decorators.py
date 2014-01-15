@@ -1,22 +1,26 @@
 from functools import wraps, update_wrapper
 
-from .memoizer import Memoizer
+from .memoizers.simple_memoizer import SimpleMemoizer
+from .memoizers.tx_memoizer import TxMemoizer
+from .memoizers.tornado_memoizer import TornadoMemoizer
 
 
-def memoized(func=None, storage=None, **options):
-    def decorator(function):
-        cleanable = options.pop('cleanable', False)
-        memoizer = Memoizer(function, storage, **options)
+def memoized_decorator_factory(memoizer_cls):
+    def memoized(func=None, storage=None, **options):
+        def decorator(function):
+            cleanable = options.pop('cleanable', False)
+            memoizer = memoizer_cls(function, storage, **options)
 
-        @wraps(function)
-        def wrapper(*args, **kwargs):
-            return memoizer.get_result(args, kwargs)
-        wrapper.memoizer = memoizer
-        if cleanable:
-            instance_wrapper = Wrapper(memoizer, wrapper)
-            wrapper = update_wrapper(instance_wrapper, function)
-        return wrapper
-    return decorator if func is None else decorator(func)
+            @wraps(function)
+            def wrapper(*args, **kwargs):
+                return memoizer.get_result(*args, **kwargs)
+            wrapper.memoizer = memoizer
+            if cleanable:
+                instance_wrapper = Wrapper(memoizer, wrapper)
+                wrapper = update_wrapper(instance_wrapper, function)
+            return wrapper
+        return decorator if func is None else decorator(func)
+    return memoized
 
 
 class Wrapper(object):
@@ -57,3 +61,8 @@ class MemoizerProxy(object):
 
     def clear(self):
         self.__memoizer.clear(self.__instance)
+
+
+memoized = memoized_decorator_factory(SimpleMemoizer)
+tx_memoized = memoized_decorator_factory(TxMemoizer)
+task_memoized = memoized_decorator_factory(TornadoMemoizer)
